@@ -6,7 +6,12 @@ const appConfig = () => ({
   BASE_PATH: getEnv("BASE_PATH", "/api"),
   MONGO_URI: getEnv("MONGO_URI", ""),
 
-  FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN", "localhost"),
+  FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN"),
+
+  GEMINI_API_KEY: getEnv("GEMINI_API_KEY", ""),
+
+  MAX_FILE_SIZE: getEnv("MAX_FILE_SIZE", "26214400"),
+  UPLOAD_PATH: getEnv("UPLOAD_PATH", "./uploads")
 });
 
 export const config = appConfig();
