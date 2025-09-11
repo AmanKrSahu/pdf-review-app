@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+} from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 
 // Configure pdf.js worker for react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -33,24 +40,55 @@ export default function PdfViewer({ src }: PdfViewerProps) {
   return (
     <div className="w-full">
       <div className="flex items-center gap-2 p-2 border-b bg-muted/30">
-        <Button variant="outline" size="icon" onClick={() => canPrev && setPageNum((n) => n - 1)} disabled={!canPrev} className="rounded-xl">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => canPrev && setPageNum((n) => n - 1)}
+          disabled={!canPrev}
+          className="rounded-xl"
+        >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <div className="text-sm tabular-nums">
           Page {pageNum} / {numPages || "-"}
         </div>
-        <Button variant="outline" size="icon" onClick={() => canNext && setPageNum((n) => n + 1)} disabled={!canNext} className="rounded-xl">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => canNext && setPageNum((n) => n + 1)}
+          disabled={!canNext}
+          className="rounded-xl"
+        >
           <ChevronRight className="h-4 w-4" />
         </Button>
         <div className="mx-2 h-4 w-px bg-border" />
-        <Button variant="outline" size="icon" onClick={() => setScale((s) => Math.max(0.25, +(s - 0.25).toFixed(2)))} className="rounded-xl">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() =>
+            setScale((s) => Math.max(0.25, +(s - 0.25).toFixed(2)))
+          }
+          className="rounded-xl"
+        >
           <ZoomOut className="h-4 w-4" />
         </Button>
-        <div className="text-sm w-14 text-center">{Math.round(scale * 100)}%</div>
-        <Button variant="outline" size="icon" onClick={() => setScale((s) => Math.min(3, +(s + 0.25).toFixed(2)))} className="rounded-xl">
+        <div className="text-sm w-14 text-center">
+          {Math.round(scale * 100)}%
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setScale((s) => Math.min(3, +(s + 0.25).toFixed(2)))}
+          className="rounded-xl"
+        >
           <ZoomIn className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="icon" onClick={() => setRotation((r) => (r + 90) % 360)} className="rounded-xl ml-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setRotation((r) => (r + 90) % 360)}
+          className="rounded-xl ml-2"
+        >
           <RotateCw className="h-4 w-4" />
         </Button>
       </div>
@@ -59,17 +97,27 @@ export default function PdfViewer({ src }: PdfViewerProps) {
         <Document
           file={src}
           options={documentOptions}
-          loading={<div className="p-6 text-sm text-muted-foreground">Loading PDF…</div>}
+          loading={
+            <div className="p-6 text-sm text-muted-foreground">
+              Loading PDF…
+            </div>
+          }
           onLoadSuccess={(pdf) => {
             setNumPages(pdf.numPages);
           }}
           onLoadError={(e) => {
-            const message = e instanceof Error ? e.message : "Failed to load PDF";
+            const message =
+              e instanceof Error ? e.message : "Failed to load PDF";
             setError(message);
           }}
-          error={<div className="p-6 text-sm text-destructive">{error || "Failed to load PDF"}</div>}
+          error={
+            <div className="p-6 text-sm text-destructive">
+              {error || "Failed to load PDF"}
+            </div>
+          }
           onSourceError={(e) => {
-            const message = e instanceof Error ? e.message : "Invalid PDF source";
+            const message =
+              e instanceof Error ? e.message : "Invalid PDF source";
             setError(message);
           }}
         >
@@ -87,5 +135,3 @@ export default function PdfViewer({ src }: PdfViewerProps) {
     </div>
   );
 }
-
-

@@ -1,7 +1,8 @@
 "use client";
 
-import { Home, BookOpen, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Home, BookOpen, Sparkles } from "lucide-react";
 
 import {
   Sidebar,
@@ -13,9 +14,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { SidebarItem } from "./sidebar-items";
 import { SidebarUser } from "./sidebar-user";
-import Link from "next/link";
+import { SidebarItem } from "./sidebar-items";
 
 const items = [
   { title: "Home", url: "/", icon: Home },

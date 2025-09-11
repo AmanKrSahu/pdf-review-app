@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { useState } from "react";
+
+import { api } from "@/lib/api";
 import { Invoice } from "@/types";
 
 interface UploadProgress {
@@ -61,26 +62,27 @@ export function useFileUpload() {
 
       // Step 3: Create invoice record in DB
       const baseNow = new Date().toISOString().split("T")[0];
-      const invoiceToCreate: Omit<Invoice, "_id" | "createdAt" | "updatedAt"> = {
-        fileId: uploadResult.fileId,
-        fileName: uploadResult.fileName,
-        vendor: {
-          name: extractedData?.vendor?.name || "Unknown Vendor",
-          address: extractedData?.vendor?.address,
-          taxId: extractedData?.vendor?.taxId,
-        },
-        invoice: {
-          number: extractedData?.invoice?.number || `INV-${Date.now()}`,
-          date: extractedData?.invoice?.date || baseNow,
-          currency: extractedData?.invoice?.currency || "USD",
-          subtotal: extractedData?.invoice?.subtotal,
-          taxPercent: extractedData?.invoice?.taxPercent,
-          total: extractedData?.invoice?.total,
-          poNumber: extractedData?.invoice?.poNumber,
-          poDate: extractedData?.invoice?.poDate,
-          lineItems: extractedData?.invoice?.lineItems || [],
-        },
-      };
+      const invoiceToCreate: Omit<Invoice, "_id" | "createdAt" | "updatedAt"> =
+        {
+          fileId: uploadResult.fileId,
+          fileName: uploadResult.fileName,
+          vendor: {
+            name: extractedData?.vendor?.name || "Unknown Vendor",
+            address: extractedData?.vendor?.address,
+            taxId: extractedData?.vendor?.taxId,
+          },
+          invoice: {
+            number: extractedData?.invoice?.number || `INV-${Date.now()}`,
+            date: extractedData?.invoice?.date || baseNow,
+            currency: extractedData?.invoice?.currency || "USD",
+            subtotal: extractedData?.invoice?.subtotal,
+            taxPercent: extractedData?.invoice?.taxPercent,
+            total: extractedData?.invoice?.total,
+            poNumber: extractedData?.invoice?.poNumber,
+            poDate: extractedData?.invoice?.poDate,
+            lineItems: extractedData?.invoice?.lineItems || [],
+          },
+        };
 
       const created = await api.createInvoice(invoiceToCreate);
 

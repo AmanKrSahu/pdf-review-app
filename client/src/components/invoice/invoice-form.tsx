@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
   Plus,
   Trash2,
@@ -11,9 +10,9 @@ import {
   BotMessageSquare,
   Loader2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
+
 import {
   Table,
   TableBody,
@@ -22,16 +21,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { toast } from "sonner";
-import { Invoice, LineItem as LineItemType } from "@/types";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
 import { api } from "@/lib/api";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Invoice, LineItem as LineItemType } from "@/types";
 
 interface InvoiceFormProps {
   invoice: Invoice;
@@ -164,44 +165,44 @@ export function InvoiceForm({
   };
 
   const handleExtract = async () => {
-  try {
-    setIsExtracting(true);
-    toast.info("Extracting data with AI...");
+    try {
+      setIsExtracting(true);
+      toast.info("Extracting data with AI...");
 
-    // Check if we have a file ID
-    if (!invoice.fileId) {
-      toast.error("Missing fileId for this invoice");
-      return;
+      // Check if we have a file ID
+      if (!invoice.fileId) {
+        toast.error("Missing fileId for this invoice");
+        return;
+      }
+
+      // Call the AI extraction API using fileId
+      const extractedData = await api.extractData(invoice.fileId);
+
+      // Update the form with extracted data
+      if (extractedData) {
+        setInvoice({
+          ...invoice,
+          ...extractedData,
+          vendor: { ...invoice.vendor, ...extractedData.vendor },
+          invoice: { ...invoice.invoice, ...extractedData.invoice },
+          fileId: extractedData.fileId ?? invoice.fileId, // fallback to existing fileId if undefined
+          _id: extractedData._id ?? invoice._id, // fallback to existing _id if undefined
+        });
+        setLineItems(extractedData.invoice?.lineItems || []);
+        setPoDate(
+          extractedData.invoice && extractedData.invoice.poDate
+            ? new Date(extractedData.invoice.poDate)
+            : undefined
+        );
+        toast.success("Data extracted successfully!");
+      }
+    } catch (error) {
+      console.error("Failed to extract data:", error);
+      toast.error("Failed to extract data with AI");
+    } finally {
+      setIsExtracting(false);
     }
-
-    // Call the AI extraction API using fileId
-    const extractedData = await api.extractData(invoice.fileId);
-
-    // Update the form with extracted data
-    if (extractedData) {
-      setInvoice({
-        ...invoice,
-        ...extractedData,
-        vendor: { ...invoice.vendor, ...extractedData.vendor },
-        invoice: { ...invoice.invoice, ...extractedData.invoice },
-        fileId: extractedData.fileId ?? invoice.fileId, // fallback to existing fileId if undefined
-        _id: extractedData._id ?? invoice._id, // fallback to existing _id if undefined
-      });
-      setLineItems(extractedData.invoice?.lineItems || []);
-      setPoDate(
-        extractedData.invoice && extractedData.invoice.poDate
-          ? new Date(extractedData.invoice.poDate)
-          : undefined
-      );
-      toast.success("Data extracted successfully!");
-    }
-  } catch (error) {
-    console.error("Failed to extract data:", error);
-    toast.error("Failed to extract data with AI");
-  } finally {
-    setIsExtracting(false);
-  }
-};
+  };
 
   return (
     <div className="space-y-2">
