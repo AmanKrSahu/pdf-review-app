@@ -1,15 +1,16 @@
 "use client";
 
-import { Invoice } from "@/types";
-import { api } from "@/lib/api";
-import dynamic from "next/dynamic";
-const PdfViewer = dynamic<{ src: string }>(
-  () => import("../pdf/PdfViewer"),
-  { ssr: false }
-);
-import { Download, Printer } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
+import { Download, Printer } from "lucide-react";
+
+import { api } from "@/lib/api";
+import { Invoice } from "@/types";
+import { Button } from "@/components/ui/button";
+
+const PdfViewer = dynamic<{ src: string }>(() => import("../pdf/PdfViewer"), {
+  ssr: false,
+});
 
 interface InvoiceViewerProps {
   invoice: Invoice;
@@ -50,14 +51,26 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-lg font-semibold">{invoice.fileName}</h2>
-          <p className="text-sm text-muted-foreground">Invoice ID: {invoice._id}</p>
+          <p className="text-sm text-muted-foreground">
+            Invoice ID: {invoice._id}
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleDownload} className="rounded-xl">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownload}
+            className="rounded-xl"
+          >
             <Download className="h-4 w-4" />
             Download
           </Button>
-          <Button variant="outline" size="sm" onClick={handlePrint} className="rounded-xl">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrint}
+            className="rounded-xl"
+          >
             <Printer className="h-4 w-4" />
             Print
           </Button>

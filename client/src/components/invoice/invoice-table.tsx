@@ -9,9 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Invoice } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Invoice } from "@/types";
 
 interface InvoiceTableProps {
   invoices: Invoice[];

@@ -1,6 +1,8 @@
 "use client";
 
-import { SidebarTrigger } from "../ui/sidebar";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,11 +11,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
-import { Separator } from "../ui/separator";
-import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
-import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 import { UploadDialog } from "../dialog";
+import { Separator } from "../ui/separator";
+import { SidebarTrigger } from "../ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const data = {
   name: "Haley Johnson",
