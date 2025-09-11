@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Plus,
   Trash2,
@@ -9,6 +9,7 @@ import {
   CalendarIcon,
   CloudUpload,
   BotMessageSquare,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
+import { api } from "@/lib/api";
 
 interface InvoiceFormProps {
   invoice: Invoice;
@@ -44,7 +46,7 @@ export function InvoiceForm({
 }: InvoiceFormProps) {
   const [invoice, setInvoice] = useState<Invoice>(initialInvoice);
   const [lineItems, setLineItems] = useState<LineItemType[]>(
-    initialInvoice.invoice.lineItems
+    initialInvoice.invoice.lineItems || []
   );
   const [expandedSections, setExpandedSections] = useState({
     customer: true,
@@ -52,12 +54,43 @@ export function InvoiceForm({
     summary: true,
     lineItems: true,
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
 
   const [poDate, setPoDate] = useState<Date | undefined>(
     initialInvoice.invoice.poDate
       ? new Date(initialInvoice.invoice.poDate)
       : undefined
   );
+
+  // Update local state when initialInvoice changes
+  useEffect(() => {
+    setInvoice(initialInvoice);
+    setLineItems(initialInvoice.invoice.lineItems || []);
+    setPoDate(
+      initialInvoice.invoice.poDate
+        ? new Date(initialInvoice.invoice.poDate)
+        : undefined
+    );
+  }, [initialInvoice]);
+
+  // Calculate totals whenever line items change
+  useEffect(() => {
+    const subtotal = lineItems.reduce(
+      (sum, item) => sum + (item.total || 0),
+      0
+    );
+
+    setInvoice((prev) => ({
+      ...prev,
+      invoice: {
+        ...prev.invoice,
+        lineItems,
+        subtotal,
+        total: subtotal, // You can add tax calculations here if needed
+      },
+    }));
+  }, [lineItems]);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections({
@@ -73,15 +106,12 @@ export function InvoiceForm({
       quantity: 1,
       total: 0,
     };
-    const updatedLineItems = [...lineItems, newItem];
-    setLineItems(updatedLineItems);
-    updateInvoiceLineItems(updatedLineItems);
+    setLineItems([...lineItems, newItem]);
   };
 
   const removeLineItem = (index: number) => {
     const updatedLineItems = lineItems.filter((_, i) => i !== index);
     setLineItems(updatedLineItems);
-    updateInvoiceLineItems(updatedLineItems);
   };
 
   const updateLineItem = (
@@ -101,32 +131,77 @@ export function InvoiceForm({
     }
 
     setLineItems(updatedItems);
-    updateInvoiceLineItems(updatedItems);
   };
 
-  const updateInvoiceLineItems = (items: LineItemType[]) => {
-    setInvoice({
-      ...invoice,
-      invoice: {
-        ...invoice.invoice,
-        lineItems: items,
-      },
-    });
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+
+      // Call the parent onSave function which uses the API hook
+      await onSave(invoice);
+    } catch (error) {
+      console.error("Failed to save invoice:", error);
+      // Error handling is done in the parent component/hook
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSave = () => {
-    onSave(invoice);
-    toast.success("Invoice data has been saved successfully.");
+  const handleDelete = async () => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this invoice? This action cannot be undone."
+      )
+    ) {
+      try {
+        // Call the parent onDelete function
+        await onDelete();
+      } catch (error) {
+        console.error("Failed to delete invoice:", error);
+        // Error handling is done in the parent component
+      }
+    }
   };
 
-  const handleDelete = () => {
-    onDelete();
-    toast.info("Invoice has been deleted.");
-  };
-
-  const handleExtract = () => {
+  const handleExtract = async () => {
+  try {
+    setIsExtracting(true);
     toast.info("Extracting data with AI...");
-  };
+
+    // Check if we have a file ID
+    if (!invoice.fileId) {
+      toast.error("Missing fileId for this invoice");
+      return;
+    }
+
+    // Call the AI extraction API using fileId
+    const extractedData = await api.extractData(invoice.fileId);
+
+    // Update the form with extracted data
+    if (extractedData) {
+      setInvoice({
+        ...invoice,
+        ...extractedData,
+        vendor: { ...invoice.vendor, ...extractedData.vendor },
+        invoice: { ...invoice.invoice, ...extractedData.invoice },
+        fileId: extractedData.fileId ?? invoice.fileId, // fallback to existing fileId if undefined
+        _id: extractedData._id ?? invoice._id, // fallback to existing _id if undefined
+      });
+      setLineItems(extractedData.invoice?.lineItems || []);
+      setPoDate(
+        extractedData.invoice && extractedData.invoice.poDate
+          ? new Date(extractedData.invoice.poDate)
+          : undefined
+      );
+      toast.success("Data extracted successfully!");
+    }
+  } catch (error) {
+    console.error("Failed to extract data:", error);
+    toast.error("Failed to extract data with AI");
+  } finally {
+    setIsExtracting(false);
+  }
+};
 
   return (
     <div className="space-y-2">
@@ -157,7 +232,7 @@ export function InvoiceForm({
             <div className="grid grid-cols-4 items-center gap-2">
               <Label className="text-sm col-span-1">Customer Name</Label>
               <Input
-                value={invoice.vendor.name}
+                value={invoice.vendor.name || ""}
                 onChange={(e) =>
                   setInvoice({
                     ...invoice,
@@ -209,11 +284,37 @@ export function InvoiceForm({
           ) : (
             <ChevronRight className="h-4 w-4 mr-2" />
           )}
-          <span className="font-bold text-md">Invoice</span>
+          <span className="font-bold text-md">Invoice Details</span>
         </div>
 
         {expandedSections.invoice && (
           <div className="p-4 space-y-3">
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label className="text-sm col-span-1">Invoice Number</Label>
+              <Input
+                value={invoice.invoice.number || ""}
+                onChange={(e) =>
+                  setInvoice({
+                    ...invoice,
+                    invoice: { ...invoice.invoice, number: e.target.value },
+                  })
+                }
+                className="col-span-3 h-8 text-xs"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label className="text-sm col-span-1">Invoice Date</Label>
+              <Input
+                value={invoice.invoice.date || ""}
+                onChange={(e) =>
+                  setInvoice({
+                    ...invoice,
+                    invoice: { ...invoice.invoice, date: e.target.value },
+                  })
+                }
+                className="col-span-3 h-8 text-xs"
+              />
+            </div>
             <div className="grid grid-cols-4 items-center gap-2">
               <Label className="text-sm col-span-1">PO Number</Label>
               <Input
@@ -303,16 +404,25 @@ export function InvoiceForm({
               <Input
                 type="number"
                 value={invoice.invoice.subtotal || 0}
+                readOnly
+                className="col-span-3 h-8 text-xs bg-muted"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <Label className="text-sm col-span-1">Total</Label>
+              <Input
+                type="number"
+                value={invoice.invoice.total || 0}
                 onChange={(e) =>
                   setInvoice({
                     ...invoice,
                     invoice: {
                       ...invoice.invoice,
-                      subtotal: Number(e.target.value),
+                      total: Number(e.target.value),
                     },
                   })
                 }
-                className="col-span-3 h-8 text-xs"
+                className="col-span-3 h-8 text-xs font-medium"
               />
             </div>
           </div>
@@ -342,7 +452,9 @@ export function InvoiceForm({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="h-8 text-sm font-semibold">Description</TableHead>
+                    <TableHead className="h-8 text-sm font-semibold">
+                      Description
+                    </TableHead>
                     <TableHead className="h-8 text-sm font-semibold text-right">
                       Unit Price
                     </TableHead>
@@ -360,7 +472,7 @@ export function InvoiceForm({
                     <TableRow key={index} className="h-10">
                       <TableCell className="p-1">
                         <Input
-                          value={item.description}
+                          value={item.description || ""}
                           onChange={(e) =>
                             updateLineItem(index, "description", e.target.value)
                           }
@@ -371,7 +483,7 @@ export function InvoiceForm({
                       <TableCell className="p-1">
                         <Input
                           type="number"
-                          value={item.unitPrice}
+                          value={item.unitPrice || 0}
                           onChange={(e) =>
                             updateLineItem(
                               index,
@@ -385,7 +497,7 @@ export function InvoiceForm({
                       <TableCell className="p-1">
                         <Input
                           type="number"
-                          value={item.quantity}
+                          value={item.quantity || 1}
                           onChange={(e) =>
                             updateLineItem(
                               index,
@@ -399,7 +511,7 @@ export function InvoiceForm({
                       <TableCell className="p-1">
                         <Input
                           type="number"
-                          value={item.total}
+                          value={item.total || 0}
                           onChange={(e) =>
                             updateLineItem(
                               index,
@@ -444,9 +556,14 @@ export function InvoiceForm({
         <Button
           variant="outline"
           onClick={handleExtract}
+          disabled={isExtracting}
           className="h-8 text-sm rounded-xl"
         >
-          <BotMessageSquare className="h-4 w-4" />
+          {isExtracting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <BotMessageSquare className="h-4 w-4" />
+          )}
           Extract
         </Button>
         <div className="flex gap-2">
@@ -458,8 +575,16 @@ export function InvoiceForm({
             <Trash2 className="h-4 w-4" />
             Delete
           </Button>
-          <Button onClick={handleSave} className="h-8 text-sm rounded-xl">
-            <CloudUpload className="h-4 w-4" />
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="h-8 text-sm rounded-xl"
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CloudUpload className="h-4 w-4" />
+            )}
             Save
           </Button>
         </div>

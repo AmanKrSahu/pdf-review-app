@@ -10,8 +10,7 @@ const appConfig = () => ({
 
   GEMINI_API_KEY: getEnv("GEMINI_API_KEY", ""),
 
-  MAX_FILE_SIZE: getEnv("MAX_FILE_SIZE", "26214400"),
-  UPLOAD_PATH: getEnv("UPLOAD_PATH", "./uploads")
+  MAX_FILE_SIZE: getEnv("MAX_FILE_SIZE", "26214400")
 });
 
 export const config = appConfig();

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { isValidObjectId } from "mongoose";
 
 import Invoice from "../models/invoice";
 import { ApiResponse } from "../common/types";
@@ -66,12 +67,15 @@ invoiceRoutes.get("/", validateQuery(searchQuerySchema), async (req, res) => {
 });
 
 /**
- * GET /invoices/:id
+ * GET /invoice/:id
  * Get single invoice by ID
  */
 invoiceRoutes.get("/:id", async (req, res) => {
   try {
-    const invoice = await Invoice.findById(req.params.id).lean();
+    const { id } = req.params as any;
+    const invoice = isValidObjectId(id)
+      ? await Invoice.findById(id).lean()
+      : await Invoice.findOne({ $or: [{ fileId: id }, { fileName: id }] }).lean();
 
     if (!invoice) {
       return res.status(404).json({
@@ -128,7 +132,7 @@ invoiceRoutes.post("/", validateBody(invoiceSchema), async (req, res) => {
 });
 
 /**
- * PUT /invoices/:id
+ * PUT /invoice/:id
  * Update existing invoice
  */
 invoiceRoutes.put(
@@ -136,8 +140,12 @@ invoiceRoutes.put(
   validateBody(invoiceSchema.partial()),
   async (req, res) => {
     try {
-      const invoice = await Invoice.findByIdAndUpdate(
-        req.params.id,
+      const { id } = req.params as any;
+      const filter = isValidObjectId(id)
+        ? { _id: id }
+        : { $or: [{ fileId: id }, { fileName: id }] };
+      const invoice = await Invoice.findOneAndUpdate(
+        filter,
         { ...req.body, updatedAt: new Date().toISOString() },
         { new: true, runValidators: true }
       );
@@ -165,12 +173,15 @@ invoiceRoutes.put(
 );
 
 /**
- * DELETE /invoices/:id
+ * DELETE /invoice/:id
  * Delete invoice and associated file
  */
 invoiceRoutes.delete("/:id", async (req, res) => {
   try {
-    const invoice = await Invoice.findByIdAndDelete(req.params.id).lean();
+    const { id } = req.params as any;
+    const invoice = isValidObjectId(id)
+      ? await Invoice.findByIdAndDelete(id).lean()
+      : await Invoice.findOneAndDelete({ $or: [{ fileId: id }, { fileName: id }] }).lean();
 
     if (!invoice) {
       return res.status(404).json({
