@@ -15,13 +15,26 @@ import { Invoice } from "@/types";
 
 interface InvoiceTableProps {
   invoices: Invoice[];
-  onDelete?: (fileId: string) => void;
+  onDelete?: (invoiceId: string) => Promise<void>;
+  loading?: boolean;
 }
 
 export default function InvoiceTable({
   invoices,
   onDelete,
 }: InvoiceTableProps) {
+  const handleDelete = async (invoiceId: string) => {
+    if (!onDelete) return;
+
+    if (window.confirm("Are you sure you want to delete this invoice?")) {
+      try {
+        await onDelete(invoiceId);
+      } catch (error) {
+        console.error("Delete failed:", error);
+      }
+    }
+  };
+
   if (invoices.length === 0) {
     return (
       <Card className="border-dashed border-2 shadow-none">
@@ -76,9 +89,10 @@ export default function InvoiceTable({
       </TableHeader>
       <TableBody>
         {invoices.map((invoice) => {
+          const invoiceId = invoice._id || invoice.fileId;
           return (
             <TableRow
-              key={invoice.fileId}
+              key={invoiceId}
               className="group hover:bg-muted/30 transition-colors"
             >
               <TableCell className="py-4">
@@ -117,14 +131,16 @@ export default function InvoiceTable({
                       <Edit className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete && onDelete(invoice.fileId)}
-                    className="text-destructive hover:bg-destructive hover:text-white"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {onDelete && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(invoiceId)}
+                      className="text-destructive hover:bg-destructive hover:text-white"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

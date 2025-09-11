@@ -29,7 +29,7 @@ export default function Navbar() {
   const handleUpload = (file: File) => {
     // Generate a mock ID for the uploaded file
     const mockId = Date.now().toString();
-    router.push(`/invoices/${mockId}`);
+    router.push(`/invoice/${mockId}`);
   };
 
   // Generate breadcrumb items from the pathname
