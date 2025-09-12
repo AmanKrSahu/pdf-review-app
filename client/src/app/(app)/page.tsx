@@ -39,8 +39,6 @@ export default function Home() {
   const handleUpload = async (file: File) => {
     try {
       const result = await uploadAndExtract(file);
-
-      // Navigate to the invoice detail page
       router.push(`/invoice/${result.fileId}`);
     } catch (error) {
       console.error("Upload failed:", error);
@@ -83,27 +81,28 @@ export default function Home() {
       <div className="space-y-4">
         <div className="flex items-center justify-between mb-6">
           <span className="text-2xl font-bold">Recent Invoices</span>
+        </div>
+        <div className="flex items-center gap-2 mb-8">
+          <div className="relative w-96">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by vendor name or invoice number..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyPress={handleSearchKeyPress}
+              className="h-9 pl-9 rounded-xl w-full"
+            />
+          </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 max-w-sm">
-              <Input
-                placeholder="Search invoices..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyPress={handleSearchKeyPress}
-                className="h-9"
-              />
-              <Button onClick={handleSearch} size="sm" variant="outline">
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
             <Button
               onClick={refresh}
               size="sm"
               variant="outline"
               disabled={invoicesLoading}
+              className="h-9 w-9 rounded-xl"
             >
               <RefreshCw
-                className={`h-4 w-4 ${invoicesLoading ? "animate-spin" : ""}`}
+                className={`h-4 w-4 text-muted-foreground ${invoicesLoading ? "animate-spin" : ""}`}
               />
             </Button>
           </div>

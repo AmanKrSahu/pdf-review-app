@@ -2,7 +2,7 @@
 
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
-import { Download, Printer } from "lucide-react";
+import { Download } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { Invoice } from "@/types";
@@ -19,32 +19,33 @@ interface InvoiceViewerProps {
 export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
   const handleDownload = async () => {
     try {
-      console.log("Downloading invoice:", invoice.fileName);
-
-      // If you have a download endpoint in your API
-      // const blob = await api.downloadInvoice(invoice._id);
-      // const url = window.URL.createObjectURL(blob);
-      // const a = document.createElement('a');
-      // a.href = url;
-      // a.download = invoice.fileName || 'invoice.pdf';
-      // document.body.appendChild(a);
-      // a.click();
-      // window.URL.revokeObjectURL(url);
-      // document.body.removeChild(a);
-
-      toast.info(
-        "Download functionality will be implemented with file storage"
-      );
+      toast.info("Preparing download...");
+      
+      const response = await fetch(api.getPDFUrl(invoice.fileId));
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PDF: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = invoice.fileName || `invoice-${invoice._id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Download completed");
     } catch (error) {
       console.error("Download failed:", error);
       toast.error("Failed to download invoice");
     }
   };
 
-  const handlePrint = () => {
-    console.log("Printing invoice:", invoice.fileName);
-    window.print();
-  };
 
   return (
     <div className="h-full flex flex-col p-6">
@@ -64,15 +65,6 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
           >
             <Download className="h-4 w-4" />
             Download
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrint}
-            className="rounded-xl"
-          >
-            <Printer className="h-4 w-4" />
-            Print
           </Button>
         </div>
       </div>
