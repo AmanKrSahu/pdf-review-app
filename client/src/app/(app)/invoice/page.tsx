@@ -24,7 +24,7 @@ export default function InvoicesPage() {
     refresh,
   } = useInvoices({
     search: searchQuery,
-    limit: 20, // Show more invoices on dedicated page
+    limit: 20,
   });
 
   const { uploadAndExtract, loading: uploadLoading } = useFileUpload();
@@ -32,8 +32,6 @@ export default function InvoicesPage() {
   const handleUpload = async (file: File) => {
     try {
       const result = await uploadAndExtract(file);
-
-      // Navigate to the invoice detail page using created invoice id
       router.push(`/invoice/${result.invoiceId}`);
     } catch (error) {
       console.error("Upload failed:", error);
@@ -59,28 +57,39 @@ export default function InvoicesPage() {
             Browse and manage all your invoice PDFs in one place
           </p>
         </div>
+      </div>
+
+      <div className="flex justify-between">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="relative flex-1 w-96">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by vendor name or invoice number..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyPress={handleSearchKeyPress}
+              className="h-9 pl-9 rounded-xl w-full"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={refresh}
+              size="sm"
+              variant="outline"
+              disabled={invoicesLoading}
+              className="h-9 w-9 rounded-xl"
+            >
+              <RefreshCw
+                className={`h-4 w-4 text-muted-foreground ${invoicesLoading ? "animate-spin" : ""}`}
+              />
+            </Button>
+          </div>
+        </div>
         <UploadDialog
           onUpload={handleUpload}
           disabled={uploadLoading}
           buttonStyle="default"
         />
-      </div>
-
-      <div className="flex items-center gap-2 max-w-md">
-        <Input
-          placeholder="Search by vendor name or invoice number..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyPress={handleSearchKeyPress}
-        />
-        <Button onClick={handleSearch} variant="outline">
-          <Search className="h-4 w-4" />
-        </Button>
-        <Button onClick={refresh} variant="outline" disabled={invoicesLoading}>
-          <RefreshCw
-            className={`h-4 w-4 ${invoicesLoading ? "animate-spin" : ""}`}
-          />
-        </Button>
       </div>
 
       <InvoiceTable
