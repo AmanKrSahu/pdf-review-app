@@ -171,15 +171,19 @@ export interface Invoice {
 
 1. Home Page
 
-<img width="1920" height="1080" alt="Screenshot (40)" src="https://github.com/user-attachments/assets/cfe20382-6d8f-479d-9525-e5ce5e62cd6c" />
+<img width="1920" height="1080" alt="Screenshot (43)" src="https://github.com/user-attachments/assets/2f58519b-ae0d-44a4-be10-f99b6dd3736a" />
 
 2. Invoice Page
 
-<img width="1920" height="1080" alt="Screenshot (41)" src="https://github.com/user-attachments/assets/b8a9c6a8-c60c-42d9-b08f-8a5e4c6db2cb" />
+<img width="1920" height="1080" alt="Screenshot (44)" src="https://github.com/user-attachments/assets/116e64b6-7d5f-494d-a75e-717f7e5dad7f" />
 
-3. PDF Reviewer Page
+3. Upload Invoice Dialog
 
-<img width="1920" height="1080" alt="Screenshot (42)" src="https://github.com/user-attachments/assets/1ce4dccb-a767-47be-b111-13608fa36d55" />
+<img width="1920" height="1080" alt="Screenshot (45)" src="https://github.com/user-attachments/assets/e246bd98-081a-4cbb-98f8-a1bc8fe2b93b" />
+
+4. PDF Reviewer Page
+
+<img width="1920" height="1080" alt="Screenshot (46)" src="https://github.com/user-attachments/assets/bcca0647-2519-4b6c-a4fc-49b894eeb28e" />
 
 ---
 
